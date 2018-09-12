@@ -1,32 +1,40 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
+
 module Main (main) where
 
 import System.Environment
+import GHC.Generics
 
-import Web.Scotty
+import qualified Web.Scotty
 import qualified Data.Text.Lazy as LazyText
 import qualified Data.Text as Text
 import Control.Monad.Trans (liftIO)
 import Database.PostgreSQL.Simple
+import Data.Aeson
 
+data Purchase = Purchase { id :: Int
+                         , description :: String
+                         , cents :: Int
+                         } deriving (Generic, ToJSON, FromJSON)
 
 
 
 main :: IO ()
 main = do
   connection <- connect defaultConnectInfo
-  scotty 6969 $ do
-    get "/all" $ getTotalAction connection
+  Web.Scotty.scotty 6969 $ do
+    Web.Scotty.get "/all" $ getTotalAction connection
 
 
 
-getTotalAction :: Connection -> ActionM ()
+getTotalAction :: Connection -> Web.Scotty.ActionM ()
 getTotalAction connection = do
     liftIO $ putStrLn "fetching"
-    purchaseTuples <- liftIO $ fmap (LazyText.pack . show) $ getTotalFromDb connection
+    purchaseTuples <- liftIO $ getTotalFromDb connection
 
     -- some time that needs to be json
-    json purchaseTuples
+    Web.Scotty.json $ fmap (\(id, description, cents) -> Purchase {Main.id = id, description = description, cents = cents}) purchaseTuples
 
 getTotalFromDb :: Connection -> IO [(Int, String, Int)]
 getTotalFromDb connection = do

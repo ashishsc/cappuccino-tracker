@@ -27,6 +27,7 @@ dependencies:
   - mtl
   - text
   - wai-extra
+  - aeson
 
 library:
   source-dirs: src
