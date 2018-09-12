@@ -28,6 +28,7 @@ dependencies:
   - text
   - wai-extra
   - aeson
+  - http-types
 
 library:
   source-dirs: src
