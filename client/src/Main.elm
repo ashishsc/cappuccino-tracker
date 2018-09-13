@@ -1,20 +1,40 @@
-module Main exposing (..)
+module Main exposing (Model, Msg(..), NewPurchase, Purchase, init, main, update, view)
 
 import Browser
-import Html exposing (Html, text, div, h1, img)
+import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src)
+import Http
+import Json.Decode as Decode
 
 
----- MODEL ----
+type alias Purchase =
+    { id : Int
+    , description : String
+    , cents : Int
+    }
+
+
+type alias NewPurchase =
+    { description : String
+    , cents : Int
+    }
 
 
 type alias Model =
-    {}
+    { purchases : List Purchase
+    , newPurchaseDescription : String
+    , newPurchaseCents : Int
+    }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( {}, Cmd.none )
+    ( { purchases = []
+      , newPurchaseDescription = ""
+      , newPurchaseCents = 0
+      }
+    , Cmd.none
+    )
 
 
 
@@ -22,7 +42,9 @@ init =
 
 
 type Msg
-    = NoOp
+    = NewDescUpdated String
+    | NewCentsUpdated Int
+    | CreateNewPurchase
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
