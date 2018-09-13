@@ -1,8 +1,9 @@
 module Main exposing (Model, Msg(..), NewPurchase, Purchase, init, main, update, view)
 
 import Browser
-import Html exposing (Html, div, h1, img, text)
-import Html.Attributes exposing (src)
+import Html exposing (Html, button, div, h1, img, text)
+import Html.Attributes exposing (class)
+import Html.Events exposing (onClick, onInput)
 import Http
 import Json.Decode as Decode
 
@@ -77,21 +78,26 @@ update msg model =
         PurchasesFetched res ->
             case res of
                 Err err ->
-                    Debug.todo (Debug.toString err)
+                    Debug.log (Debug.toString err) ( model, Cmd.none )
 
                 Ok purchases ->
                     ( { model | purchases = purchases }, Cmd.none )
 
 
-
----- VIEW ----
+getTotalOwed : List Purchase -> Int
+getTotalOwed purchases =
+    List.foldr (\purchase sum -> sum + purchase.cents) 0 purchases
 
 
 view : Model -> Html Msg
 view model =
     div []
-        [ img [ src "/logo.svg" ] []
-        , h1 [] [ text "Your Elm App is working!" ]
+        [ h1 [] [ text "How many cappuccinos do you owe me?" ]
+        , div [ class "total-owed" ] [ text <| String.fromInt <| getTotalOwed <| model.purchases ]
+        , div [ class "shop-choices" ]
+            [ div [ class "shop" ] [ button [] [ text "Jaho" ] ]
+            , div [ class "shop" ] [ button [] [ text "Press" ] ]
+            ]
         ]
 
 
