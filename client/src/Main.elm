@@ -14,6 +14,24 @@ type alias Purchase =
     }
 
 
+purchaseDecoder : Decode.Decoder Purchase
+purchaseDecoder =
+    Decode.map3 Purchase
+        (Decode.field "id" Decode.int)
+        (Decode.field "description" Decode.string)
+        (Decode.field "cents" Decode.int)
+
+
+getPurchases : Http.Request (List Purchase)
+getPurchases =
+    Http.get "localhost:6969/all" (Decode.list purchaseDecoder)
+
+
+getPurchasesCmd : Cmd Msg
+getPurchasesCmd =
+    getPurchases |> Http.send PurchasesFetched
+
+
 type alias NewPurchase =
     { description : String
     , cents : Int
@@ -33,23 +51,36 @@ init =
       , newPurchaseDescription = ""
       , newPurchaseCents = 0
       }
-    , Cmd.none
+    , getPurchasesCmd
     )
-
-
-
----- UPDATE ----
 
 
 type Msg
     = NewDescUpdated String
     | NewCentsUpdated Int
     | CreateNewPurchase
+    | PurchasesFetched (Result Http.Error (List Purchase))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        NewCentsUpdated cents ->
+            ( { model | newPurchaseCents = cents }, Cmd.none )
+
+        NewDescUpdated desc ->
+            ( { model | newPurchaseDescription = desc }, Cmd.none )
+
+        CreateNewPurchase ->
+            Debug.todo "y u no do this"
+
+        PurchasesFetched res ->
+            case res of
+                Err err ->
+                    Debug.todo (Debug.toString err)
+
+                Ok purchases ->
+                    ( { model | purchases = purchases }, Cmd.none )
 
 
 
