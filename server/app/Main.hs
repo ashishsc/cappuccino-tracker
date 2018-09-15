@@ -16,6 +16,7 @@ import qualified Data.Text as Text
 import qualified Data.Text.Lazy as LazyText
 import Database.PostgreSQL.Simple
 import Network.HTTP.Types.Status (status200)
+import Network.Wai.Middleware.Cors (simpleCors)
 import qualified Web.Scotty
 
 data Purchase = Purchase
@@ -33,6 +34,7 @@ main :: IO ()
 main = do
   connection <- connect defaultConnectInfo
   Web.Scotty.scotty 6969 $ do
+    Web.Scotty.middleware simpleCors
     Web.Scotty.get "/all" $ getTotalAction connection
     Web.Scotty.post "/purchase" $ addPurchaseAction connection
 

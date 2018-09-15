@@ -23,7 +23,7 @@ apiUrl =
     { protocol = Url.Http
     , host = "localhost"
     , port_ = Just 6969
-    , path = ""
+    , path = "/all"
     , query = Nothing
     , fragment = Nothing
     }

@@ -29,6 +29,7 @@ dependencies:
   - wai-extra
   - aeson
   - http-types
+  - wai-cors
 
 library:
   source-dirs: src
