@@ -6,12 +6,26 @@ import Html.Attributes exposing (class)
 import Html.Events exposing (onClick, onInput)
 import Http
 import Json.Decode as Decode
+import Url
 
 
 type alias Purchase =
     { id : Int
     , description : String
     , cents : Int
+    }
+
+
+{-| TODO: get this from env
+-}
+apiUrl : Url.Url
+apiUrl =
+    { protocol = Url.Http
+    , host = "localhost"
+    , port_ = Just 6969
+    , path = ""
+    , query = Nothing
+    , fragment = Nothing
     }
 
 
@@ -25,7 +39,7 @@ purchaseDecoder =
 
 getPurchases : Http.Request (List Purchase)
 getPurchases =
-    Http.get "localhost:6969/all" (Decode.list purchaseDecoder)
+    Http.get (Url.toString apiUrl) (Decode.list purchaseDecoder)
 
 
 getPurchasesCmd : Cmd Msg
