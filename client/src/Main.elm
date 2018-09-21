@@ -1,7 +1,9 @@
 module Main exposing (Model, Msg(..), NewPurchase, Purchase, init, main, update, view)
 
 import Browser
-import Html exposing (Html, button, div, h1, img, text)
+import Element exposing (el, text)
+import Element.Input exposing (button)
+import Html exposing (Html)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick, onInput)
 import Http
@@ -14,6 +16,31 @@ type alias Purchase =
     , description : String
     , cents : Int
     }
+
+
+type CoffeeShop
+    = JaHo
+    | Prett
+
+
+coffeeShopPrice : CoffeeShop -> Int
+coffeeShopPrice shop =
+    case shop of
+        JaHo ->
+            900
+
+        Prett ->
+            600
+
+
+coffeeShopToString : CoffeeShop -> String
+coffeeShopToString shop =
+    case shop of
+        JaHo ->
+            "JaHo"
+
+        Prett ->
+            "Prett"
 
 
 {-| TODO: get this from env
@@ -74,6 +101,7 @@ type Msg
     = NewDescUpdated String
     | NewCentsUpdated Int
     | CreateNewPurchase
+    | BuyCap CoffeeShop
     | PurchasesFetched (Result Http.Error (List Purchase))
 
 
@@ -87,6 +115,9 @@ update msg model =
             ( { model | newPurchaseDescription = desc }, Cmd.none )
 
         CreateNewPurchase ->
+            Debug.todo "y u no do this"
+
+        BuyCap _ ->
             Debug.todo "y u no do this"
 
         PurchasesFetched res ->
@@ -105,14 +136,24 @@ getTotalOwed purchases =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ h1 [] [ text "How many cappuccinos do you owe me?" ]
-        , div [ class "total-owed" ] [ text <| String.fromInt <| getTotalOwed <| model.purchases ]
-        , div [ class "shop-choices" ]
-            [ div [ class "shop" ] [ button [] [ text "Jaho" ] ]
-            , div [ class "shop" ] [ button [] [ text "Press" ] ]
-            ]
+    Element.column []
+        [ el [] <| text "How many cappuccinos do you owe me?"
+        , el [] <| text <| String.fromInt <| getTotalOwed <| model.purchases
+        , Element.row [] [ capView JaHo, capView Prett ]
         ]
+        |> Element.layout []
+
+
+capView : CoffeeShop -> Element.Element Msg
+capView shop =
+    button []
+        { onPress = Just (BuyCap JaHo)
+        , label =
+            Element.image []
+                { src = "cappuccino.svg"
+                , description = "Buy cappuccino from " ++ coffeeShopToString shop
+                }
+        }
 
 
 
