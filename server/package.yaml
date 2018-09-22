@@ -30,6 +30,7 @@ dependencies:
   - aeson
   - http-types
   - wai-cors
+  - bytestring
 
 library:
   source-dirs: src

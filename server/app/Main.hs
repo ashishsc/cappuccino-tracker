@@ -6,17 +6,18 @@ module Main
   ( main
   ) where
 
-import GHC.Generics
-import System.Environment
-
 import Control.Monad.Trans (liftIO)
 import Data.Aeson
+import Data.ByteString.Char8 (pack)
 import Data.Int (Int64)
+import Data.Maybe (fromMaybe)
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy as LazyText
 import Database.PostgreSQL.Simple
+import GHC.Generics
 import Network.HTTP.Types.Status (status200)
 import Network.Wai.Middleware.Cors (simpleCors)
+import System.Environment (getEnvironment, lookupEnv)
 import qualified Web.Scotty
 
 data Purchase = Purchase
@@ -32,7 +33,10 @@ data NewPurchase = NewPurchase
 
 main :: IO ()
 main = do
-  connection <- connect defaultConnectInfo
+  maybeEnvDbUrl <- lookupEnv "DB_URL"
+  let defaultConnString = postgreSQLConnectionString defaultConnectInfo
+  connection <-
+    connectPostgreSQL $ fromMaybe defaultConnString (fmap pack maybeEnvDbUrl)
   Web.Scotty.scotty 6969 $ do
     Web.Scotty.middleware simpleCors
     Web.Scotty.get "/all" $ getTotalAction connection
