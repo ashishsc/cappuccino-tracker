@@ -69,6 +69,16 @@ getPurchases =
     Http.get (Url.toString apiUrl) (Decode.list purchaseDecoder)
 
 
+getCapSum : Http.Request Int
+getCapSum =
+    Http.get ({ apiUrl | path = "/cap-total" } |> Url.toString) Decode.int
+
+
+getCapSumCmd : Cmd Msg
+getCapSumCmd =
+    getCapSum |> Http.send CapPurchasesSumFetched
+
+
 getPurchasesCmd : Cmd Msg
 getPurchasesCmd =
     getPurchases |> Http.send PurchasesFetched
@@ -84,6 +94,8 @@ type alias Model =
     { purchases : List Purchase
     , newPurchaseDescription : String
     , newPurchaseCents : Int
+    , capSum : Int
+    , isLoading : Bool
     }
 
 
@@ -92,8 +104,12 @@ init =
     ( { purchases = []
       , newPurchaseDescription = ""
       , newPurchaseCents = 0
+      , capSum = 0
+
+      -- TODO Set this to True and render some nice loading
+      , isLoading = False
       }
-    , getPurchasesCmd
+    , Cmd.batch [ getPurchasesCmd, getCapSumCmd ]
     )
 
 
@@ -102,6 +118,7 @@ type Msg
     | NewCentsUpdated Int
     | BuyCap CoffeeShop
     | PurchasesFetched (Result Http.Error (List Purchase))
+    | CapPurchasesSumFetched (Result Http.Error Int)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -124,6 +141,14 @@ update msg model =
                 Ok purchases ->
                     ( { model | purchases = purchases }, Cmd.none )
 
+        CapPurchasesSumFetched res ->
+            case res of
+                Err err ->
+                    Debug.log (Debug.toString err) ( model, Cmd.none )
+
+                Ok sum ->
+                    ( { model | capSum = sum }, Cmd.none )
+
 
 getTotalOwed : List Purchase -> Int
 getTotalOwed purchases =
@@ -135,6 +160,8 @@ view model =
     Element.column []
         [ el [] <| text "How many cappuccinos do you owe me?"
         , el [] <| text <| String.fromInt <| getTotalOwed <| model.purchases
+        , el [] <| text "How much have you spent on cappuccinos?"
+        , el [] <| text <| String.fromInt <| model.capSum
         , Element.row [] [ capView JaHo, capView Prett ]
         ]
         |> Element.layout []
