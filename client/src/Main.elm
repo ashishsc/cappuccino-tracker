@@ -100,7 +100,6 @@ init =
 type Msg
     = NewDescUpdated String
     | NewCentsUpdated Int
-    | CreateNewPurchase
     | BuyCap CoffeeShop
     | PurchasesFetched (Result Http.Error (List Purchase))
 
@@ -113,9 +112,6 @@ update msg model =
 
         NewDescUpdated desc ->
             ( { model | newPurchaseDescription = desc }, Cmd.none )
-
-        CreateNewPurchase ->
-            Debug.todo "y u no do this"
 
         BuyCap _ ->
             Debug.todo "y u no do this"

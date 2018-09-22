@@ -40,6 +40,7 @@ main = do
   Web.Scotty.scotty 6969 $ do
     Web.Scotty.middleware simpleCors
     Web.Scotty.get "/all" $ getTotalAction connection
+    Web.Scotty.get "/cap-total" $ getCapSumAction connection
     Web.Scotty.post "/purchase" $ addPurchaseAction connection
 
 getTotalAction :: Connection -> Web.Scotty.ActionM ()
@@ -51,6 +52,12 @@ getTotalAction connection = do
     fmap
       (\(id, description, cents) -> Purchase id description cents)
       purchaseTuples
+
+getCapSumAction :: Connection -> Web.Scotty.ActionM ()
+getCapSumAction connection = do
+  liftIO $ putStrLn "fetch aggregate cappucino purchases"
+  capSum <- liftIO $ getCapSumFromDb connection
+  Web.Scotty.json $ capSum
 
 addPurchaseAction :: Connection -> Web.Scotty.ActionM ()
 addPurchaseAction connection = do
@@ -64,6 +71,11 @@ getTotalFromDb :: Connection -> IO [(Int, String, Int)]
 getTotalFromDb connection = do
   xs <- query_ connection "select * from cap.purchases"
   return xs
+
+getCapSumFromDb :: Connection -> IO Int
+getCapSumFromDb connection = do
+  capSum <- query_ connection "select sum(cents) from cap.caps group by cents"
+  return $ fromOnly $ head capSum
 
 addPurchaseToDb :: Connection -> NewPurchase -> IO Int64
 addPurchaseToDb connection NewPurchase {description = d, cents = c} = do
