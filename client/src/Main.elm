@@ -172,7 +172,7 @@ capView shop =
     button []
         { onPress = Just (BuyCap JaHo)
         , label =
-            Element.image []
+            Element.image [ Element.width (Element.px 50), Element.height (Element.px 50) ]
                 { src = "cappuccino.svg"
                 , description = "Buy cappuccino from " ++ coffeeShopToString shop
                 }
