@@ -1,7 +1,8 @@
 module Main exposing (Model, Msg(..), NewPurchase, Purchase, init, main, update, view)
 
 import Browser
-import Element exposing (el, text)
+import Element as E exposing (el, text)
+import Element.Border as Border
 import Element.Input exposing (button)
 import Html exposing (Html)
 import Html.Attributes exposing (class)
@@ -157,30 +158,46 @@ getTotalOwed purchases =
 
 view : Model -> Html Msg
 view model =
-    Element.column []
+    E.column
+        [ E.width E.fill
+        , E.height E.fill
+        , E.centerX
+        , E.centerY
+        , E.padding 50
+        ]
         [ el [] <| text "How many cappuccinos do you owe me?"
         , el [] <| text <| String.fromInt <| getTotalOwed <| model.purchases
         , el [] <| text "How much have you spent on cappuccinos?"
         , el [] <| text <| String.fromInt <| model.capSum
-        , Element.row [] [ capView JaHo, capView Prett ]
+        , E.row [ E.width E.fill, E.height E.fill ]
+            [ capView [] JaHo
+            , el
+                [ Border.width 2
+                , Border.solid
+                , E.centerX
+                , E.height E.fill
+                ]
+                (text "")
+            , capView [] Prett
+            ]
         ]
-        |> Element.layout []
+        |> E.layout
+            [ E.width E.fill
+            , E.height E.fill
+            , E.centerX
+            ]
 
 
-capView : CoffeeShop -> Element.Element Msg
-capView shop =
-    button []
+capView : List (E.Attribute Msg) -> CoffeeShop -> E.Element Msg
+capView attrs shop =
+    button attrs
         { onPress = Just (BuyCap JaHo)
         , label =
-            Element.image [ Element.width (Element.px 50), Element.height (Element.px 50) ]
+            E.image [ E.width (E.px 50), E.height (E.px 50) ]
                 { src = "cappuccino.svg"
                 , description = "Buy cappuccino from " ++ coffeeShopToString shop
                 }
         }
-
-
-
----- PROGRAM ----
 
 
 main : Program () Model Msg
