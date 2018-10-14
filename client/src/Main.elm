@@ -1,6 +1,7 @@
 module Main exposing (Model, Msg(..), NewPurchase, Purchase, init, main, update, view)
 
 import Browser
+import Cappuccino exposing (capSvg)
 import Element as E exposing (el, text)
 import Element.Border as Border
 import Element.Input exposing (button)
@@ -193,10 +194,7 @@ capView attrs shop =
     button attrs
         { onPress = Just (BuyCap JaHo)
         , label =
-            E.image [ E.width (E.px 50), E.height (E.px 50) ]
-                { src = "cappuccino.svg"
-                , description = "Buy cappuccino from " ++ coffeeShopToString shop
-                }
+            el [ E.width (E.px 50), E.height (E.px 50) ] (E.html capSvg)
         }
 
 
