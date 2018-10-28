@@ -45,6 +45,16 @@ coffeeShopToString shop =
             "Prett"
 
 
+coffeeShopLidColor : CoffeeShop -> String
+coffeeShopLidColor shop =
+    case shop of
+        JaHo ->
+            "f79be8"
+
+        Prett ->
+            "b20101"
+
+
 {-| TODO: get this from env
 -}
 apiUrl : Url.Url
@@ -192,9 +202,13 @@ view model =
 capView : List (E.Attribute Msg) -> CoffeeShop -> E.Element Msg
 capView attrs shop =
     button attrs
-        { onPress = Just (BuyCap JaHo)
+        { onPress = Just (BuyCap shop)
         , label =
-            el [ E.width (E.px 50), E.height (E.px 50) ] (E.html capSvg)
+            E.column [ E.centerX ]
+                [ el [ E.width (E.px 100), E.height (E.px 100) ]
+                    (E.html <| capSvg <| coffeeShopLidColor shop)
+                , text (coffeeShopToString shop)
+                ]
         }
 
 
