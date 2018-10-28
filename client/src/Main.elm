@@ -20,39 +20,21 @@ type alias Purchase =
     }
 
 
-type CoffeeShop
-    = JaHo
-    | Prett
+type alias CoffeeShop =
+    { name : String
+    , priceCents : Int
+    , lidColor : String
+    }
 
 
-coffeeShopPrice : CoffeeShop -> Int
-coffeeShopPrice shop =
-    case shop of
-        JaHo ->
-            900
-
-        Prett ->
-            600
+jaHo : CoffeeShop
+jaHo =
+    CoffeeShop "JaHo" 900 "f79be8"
 
 
-coffeeShopToString : CoffeeShop -> String
-coffeeShopToString shop =
-    case shop of
-        JaHo ->
-            "JaHo"
-
-        Prett ->
-            "Prett"
-
-
-coffeeShopLidColor : CoffeeShop -> String
-coffeeShopLidColor shop =
-    case shop of
-        JaHo ->
-            "f79be8"
-
-        Prett ->
-            "b20101"
+prett : CoffeeShop
+prett =
+    CoffeeShop "Prett" 600 "b20101"
 
 
 {-| TODO: get this from env
@@ -94,6 +76,11 @@ getCapSumCmd =
 getPurchasesCmd : Cmd Msg
 getPurchasesCmd =
     getPurchases |> Http.send PurchasesFetched
+
+
+centsToString : Int -> String
+centsToString cents =
+    "$ " ++ (toFloat cents / 100 |> String.fromFloat)
 
 
 type alias NewPurchase =
@@ -176,20 +163,13 @@ view model =
         , E.centerY
         , E.padding 50
         ]
-        [ el [] <| text "How many cappuccinos do you owe me?"
-        , el [] <| text <| String.fromInt <| getTotalOwed <| model.purchases
-        , el [] <| text "How much have you spent on cappuccinos?"
-        , el [] <| text <| String.fromInt <| model.capSum
+        [ el [] <| text "How much have you spent on cappuccinos?"
+        , el [] <| text <| centsToString <| model.capSum
         , E.row [ E.width E.fill, E.height E.fill ]
-            [ capView [] JaHo
-            , el
-                [ Border.width 2
-                , Border.solid
-                , E.centerX
-                , E.height E.fill
-                ]
+            [ capView [] jaHo
+            , el [ Border.width 2, Border.solid, E.centerX, E.height E.fill ]
                 (text "")
-            , capView [] Prett
+            , capView [] prett
             ]
         ]
         |> E.layout
@@ -206,8 +186,9 @@ capView attrs shop =
         , label =
             E.column [ E.centerX ]
                 [ el [ E.width (E.px 100), E.height (E.px 100) ]
-                    (E.html <| capSvg <| coffeeShopLidColor shop)
-                , text (coffeeShopToString shop)
+                    (E.html <| capSvg shop.lidColor)
+                , text shop.name
+                , text (centsToString shop.priceCents)
                 ]
         }
 
