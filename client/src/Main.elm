@@ -187,8 +187,8 @@ capView attrs shop =
             E.column [ E.centerX ]
                 [ el [ E.width (E.px 100), E.height (E.px 100) ]
                     (E.html <| capSvg shop.lidColor)
-                , text shop.name
-                , text (centsToString shop.priceCents)
+                , el [ E.centerX, E.moveLeft 10 ] (text shop.name)
+                , el [ E.centerX, E.moveLeft 10 ] <| text <| centsToString <| shop.priceCents
                 ]
         }
 
