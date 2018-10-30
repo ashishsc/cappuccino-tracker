@@ -3,7 +3,9 @@ module Main exposing (Model, Msg(..), NewPurchase, Purchase, init, main, update,
 import Browser
 import Cappuccino exposing (capSvg)
 import Element as E exposing (el, text)
+import Element.Background as BG
 import Element.Border as Border
+import Element.Font as Font
 import Element.Input exposing (button)
 import Html exposing (Html)
 import Html.Attributes exposing (class)
@@ -95,6 +97,7 @@ type alias Model =
     , newPurchaseCents : Int
     , capSum : Int
     , isLoading : Bool
+    , buyingCap : Maybe CoffeeShop
     }
 
 
@@ -107,6 +110,7 @@ init =
 
       -- TODO Set this to True and render some nice loading
       , isLoading = False
+      , buyingCap = Nothing
       }
     , Cmd.batch [ getPurchasesCmd, getCapSumCmd ]
     )
@@ -116,6 +120,8 @@ type Msg
     = NewDescUpdated String
     | NewCentsUpdated Int
     | BuyCap CoffeeShop
+    | ConfirmBuyCap CoffeeShop
+    | CancelBuyCap
     | PurchasesFetched (Result Http.Error (List Purchase))
     | CapPurchasesSumFetched (Result Http.Error Int)
 
@@ -129,8 +135,14 @@ update msg model =
         NewDescUpdated desc ->
             ( { model | newPurchaseDescription = desc }, Cmd.none )
 
+        ConfirmBuyCap shop ->
+            ( { model | buyingCap = Just shop }, Cmd.none )
+
         BuyCap _ ->
             Debug.todo "y u no do this"
+
+        CancelBuyCap ->
+            ( { model | buyingCap = Nothing }, Cmd.none )
 
         PurchasesFetched res ->
             case res of
@@ -152,6 +164,11 @@ update msg model =
 getTotalOwed : List Purchase -> Int
 getTotalOwed purchases =
     List.foldr (\purchase sum -> sum + purchase.cents) 0 purchases
+
+
+backgroundColor : E.Color
+backgroundColor =
+    E.rgb255 87 86 195
 
 
 view : Model -> Html Msg
@@ -176,21 +193,67 @@ view model =
             [ E.width E.fill
             , E.height E.fill
             , E.centerX
+            , BG.gradient
+                { angle = pi / 4
+                , steps =
+                    [ backgroundColor
+                    , E.rgb255 255 255 255
+                    ]
+                }
             ]
 
 
 capView : List (E.Attribute Msg) -> CoffeeShop -> E.Element Msg
 capView attrs shop =
     button attrs
-        { onPress = Just (BuyCap shop)
+        { onPress = Just (ConfirmBuyCap shop)
         , label =
             E.column [ E.centerX ]
                 [ el [ E.width (E.px 100), E.height (E.px 100) ]
                     (E.html <| capSvg shop.lidColor)
-                , el [ E.centerX, E.moveLeft 10 ] (text shop.name)
-                , el [ E.centerX, E.moveLeft 10 ] <| text <| centsToString <| shop.priceCents
+                , el
+                    [ E.centerX
+                    , E.moveLeft 10
+                    , Font.color (E.rgb255 255 255 255)
+                    ]
+                    (text shop.name)
+                , el
+                    [ E.centerX
+                    , E.moveLeft 10
+                    , Font.color (E.rgb255 255 255 255)
+                    ]
+                  <|
+                    text <|
+                        centsToString shop.priceCents
                 ]
         }
+
+
+confirmDialog : CoffeeShop -> E.Element Msg
+confirmDialog ({ name, priceCents } as shop) =
+    let
+        modalDimension =
+            E.px 150
+    in
+    el [ E.width modalDimension, E.height modalDimension ] <|
+        E.column []
+            [ E.text <|
+                "Are you sure you would like to purchase "
+                    ++ name
+                    ++ " from "
+                    ++ centsToString priceCents
+                    ++ "?"
+            , E.row []
+                [ button []
+                    { onPress = Just <| BuyCap shop
+                    , label = E.text "Confirm"
+                    }
+                , button []
+                    { onPress = Just <| CancelBuyCap
+                    , label = E.text "Cancel"
+                    }
+                ]
+            ]
 
 
 main : Program () Model Msg
