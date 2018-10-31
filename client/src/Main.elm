@@ -173,33 +173,39 @@ backgroundColor =
 
 view : Model -> Html Msg
 view model =
-    E.column
-        [ E.width E.fill
-        , E.height E.fill
-        , E.centerX
-        , E.centerY
-        , E.padding 50
-        ]
-        [ el [] <| text "How much have you spent on cappuccinos?"
-        , el [] <| text <| centsToString <| model.capSum
-        , E.row [ E.width E.fill, E.height E.fill ]
-            [ capView [] jaHo
-            , el [ Border.width 2, Border.solid, E.centerX, E.height E.fill ]
-                (text "")
-            , capView [] prett
-            ]
-        ]
-        |> E.layout
+    let
+        baseAttrs =
             [ E.width E.fill
             , E.height E.fill
             , E.centerX
             , BG.gradient
-                { angle = pi / 4
-                , steps =
-                    [ backgroundColor
-                    , E.rgb255 255 255 255
-                    ]
-                }
+                { angle = pi / 4, steps = [ backgroundColor, E.rgb255 255 255 255 ] }
+            ]
+
+        attrs =
+            case model.buyingCap of
+                Just shop ->
+                    baseAttrs ++ [ E.inFront (confirmDialog shop) ]
+
+                Nothing ->
+                    baseAttrs
+    in
+    E.layout attrs <|
+        E.column
+            [ E.width E.fill
+            , E.height E.fill
+            , E.centerX
+            , E.centerY
+            , E.padding 50
+            ]
+            [ el [] <| text "How much have you spent on cappuccinos?"
+            , el [] <| text <| centsToString <| model.capSum
+            , E.row [ E.width E.fill, E.height E.fill ]
+                [ capView [] jaHo
+                , el [ Border.width 2, Border.solid, E.centerX, E.height E.fill ]
+                    (text "")
+                , capView [] prett
+                ]
             ]
 
 
