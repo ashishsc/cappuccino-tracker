@@ -12,6 +12,15 @@ import Html.Attributes exposing (class)
 import Html.Events exposing (onClick, onInput)
 import Http
 import Json.Decode as Decode
+import Palette
+    exposing
+        ( backgroundColor
+        , black
+        , grayBlue
+        , money
+        , textWithBorder
+        , white
+        )
 import Url
 
 
@@ -161,26 +170,43 @@ update msg model =
                     ( { model | capSum = sum }, Cmd.none )
 
 
-getTotalOwed : List Purchase -> Int
-getTotalOwed purchases =
-    List.foldr (\purchase sum -> sum + purchase.cents) 0 purchases
+totalOwed : Model -> E.Element Msg
+totalOwed { capSum, purchases } =
+    let
+        totalPurchased =
+            List.foldr
+                (\purchase sum -> sum + purchase.cents)
+                0
+                purchases
 
-
-backgroundColor : E.Color
-backgroundColor =
-    E.rgb255 87 86 195
+        total =
+            capSum - totalPurchased
+    in
+    E.row [ E.width (E.px 100) ]
+        [ el [] (text "Total Owed ")
+        , el [ Font.color money ] (text <| centsToString total)
+        ]
 
 
 view : Model -> Html Msg
 view model =
     let
         baseAttrs =
-            [ E.width E.fill
-            , E.height E.fill
-            , E.centerX
-            , BG.gradient
-                { angle = pi / 4, steps = [ backgroundColor, E.rgb255 255 255 255 ] }
-            ]
+            List.concat
+                [ textWithBorder
+                , [ E.width E.fill
+                  , E.height E.fill
+                  , E.centerX
+                  , BG.gradient
+                        { angle = pi / 2
+                        , steps =
+                            [ backgroundColor
+                            , black
+                            , backgroundColor
+                            ]
+                        }
+                  ]
+                ]
 
         attrs =
             case model.buyingCap of
@@ -198,8 +224,7 @@ view model =
             , E.centerY
             , E.padding 50
             ]
-            [ el [] <| text "How much have you spent on cappuccinos?"
-            , el [] <| text <| centsToString <| model.capSum
+            [ totalOwed model
             , E.row [ E.width E.fill, E.height E.fill ]
                 [ capView [] jaHo
                 , el [ Border.width 2, Border.solid, E.centerX, E.height E.fill ]
@@ -214,19 +239,18 @@ capView attrs shop =
     button attrs
         { onPress = Just (ConfirmBuyCap shop)
         , label =
-            E.column [ E.centerX ]
+            E.column [ E.centerX, E.spacing 5 ]
                 [ el [ E.width (E.px 100), E.height (E.px 100) ]
                     (E.html <| capSvg shop.lidColor)
                 , el
                     [ E.centerX
                     , E.moveLeft 10
-                    , Font.color (E.rgb255 255 255 255)
                     ]
                     (text shop.name)
                 , el
                     [ E.centerX
                     , E.moveLeft 10
-                    , Font.color (E.rgb255 255 255 255)
+                    , Font.color money
                     ]
                   <|
                     text <|
@@ -237,19 +261,23 @@ capView attrs shop =
 
 confirmDialog : CoffeeShop -> E.Element Msg
 confirmDialog ({ name, priceCents } as shop) =
-    let
-        modalDimension =
-            E.px 150
-    in
-    el [ E.width modalDimension, E.height modalDimension ] <|
-        E.column []
+    el
+        [ E.width (E.px 350)
+        , E.height (E.px 100)
+        , E.centerX
+        , E.centerY
+        , BG.color grayBlue
+        , E.padding 10
+        , Border.rounded 5
+        ]
+    <|
+        E.column [ E.spacing 10, E.centerX ]
             [ E.text <|
-                "Are you sure you would like to purchase "
+                "Confirm purchase from "
                     ++ name
-                    ++ " from "
-                    ++ centsToString priceCents
                     ++ "?"
-            , E.row []
+            , E.text ("Price: " ++ centsToString priceCents)
+            , E.row [ E.spaceEvenly, E.width E.fill ]
                 [ button []
                     { onPress = Just <| BuyCap shop
                     , label = E.text "Confirm"
