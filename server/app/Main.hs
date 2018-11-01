@@ -15,7 +15,7 @@ import qualified Data.Text as Text
 import qualified Data.Text.Lazy as LazyText
 import Database.PostgreSQL.Simple
 import GHC.Generics
-import Network.HTTP.Types.Status (status200)
+import Network.HTTP.Types.Status (status200, status201)
 import Network.Wai.Middleware.Cors (simpleCors)
 import System.Environment (getEnvironment, lookupEnv)
 import qualified Web.Scotty
@@ -31,6 +31,11 @@ data NewPurchase = NewPurchase
   , cents :: Int
   } deriving (Generic, ToJSON, FromJSON)
 
+data NewCapPurchase = NewCapPurchase
+  { shop :: String
+  , cents :: Int
+  } deriving (Generic, ToJSON, FromJSON)
+
 main :: IO ()
 main = do
   maybeEnvDbUrl <- lookupEnv "DB_URL"
@@ -42,6 +47,7 @@ main = do
     Web.Scotty.get "/all" $ getTotalAction connection
     Web.Scotty.get "/cap-total" $ getCapSumAction connection
     Web.Scotty.post "/purchase" $ addPurchaseAction connection
+    Web.Scotty.post "/buy-cap" $ buyCapAction connection
 
 getTotalAction :: Connection -> Web.Scotty.ActionM ()
 getTotalAction connection = do
@@ -65,7 +71,15 @@ addPurchaseAction connection = do
   newPurchase <- Web.Scotty.jsonData :: Web.Scotty.ActionM NewPurchase
   rowsAffected <- liftIO $ addPurchaseToDb connection newPurchase
   liftIO $ putStrLn (show rowsAffected)
-  Web.Scotty.status status200
+  Web.Scotty.status status201
+
+buyCapAction :: Connection -> Web.Scotty.ActionM ()
+buyCapAction connection = do
+  liftIO $ putStrLn "buying cappuccino"
+  newCap <- Web.Scotty.jsonData :: Web.Scotty.ActionM NewCapPurchase
+  rowsAffected <- liftIO $ addCapPurchaseToDb connection newCap
+  liftIO $ putStrLn (show rowsAffected)
+  Web.Scotty.status status201
 
 getTotalFromDb :: Connection -> IO [(Int, String, Int)]
 getTotalFromDb connection = do
@@ -74,7 +88,7 @@ getTotalFromDb connection = do
 
 getCapSumFromDb :: Connection -> IO Int
 getCapSumFromDb connection = do
-  capSum <- query_ connection "select sum(cents) from cap.caps group by cents"
+  capSum <- query_ connection "select sum(cents) from cap.caps"
   return $ fromOnly $ head capSum
 
 addPurchaseToDb :: Connection -> NewPurchase -> IO Int64
@@ -83,3 +97,7 @@ addPurchaseToDb connection NewPurchase {description = d, cents = c} = do
     connection
     "INSERT INTO cap.purchases (description, cents) VALUES (?, ?)"
     (d, c)
+
+addCapPurchaseToDb :: Connection -> NewCapPurchase -> IO Int64
+addCapPurchaseToDb connection NewCapPurchase {shop = s, cents = c} = do
+  execute connection "INSERT INTO cap.caps (shop, cents) VALUES (?, ?)" (s, c)

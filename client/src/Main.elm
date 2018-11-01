@@ -12,6 +12,7 @@ import Html.Attributes exposing (class)
 import Html.Events exposing (onClick, onInput)
 import Http
 import Json.Decode as Decode
+import Json.Encode as Encode
 import Palette
     exposing
         ( backgroundColor
@@ -89,6 +90,35 @@ getPurchasesCmd =
     getPurchases |> Http.send PurchasesFetched
 
 
+post : String -> Http.Body -> Http.Request String
+post url body =
+    Http.request
+        { method = "POST"
+        , url = url
+        , headers = []
+        , body = body
+        , expect = Http.expectString
+        , timeout = Nothing
+        , withCredentials = False
+        }
+
+
+buyCapCmd : CoffeeShop -> Cmd Msg
+buyCapCmd { priceCents, name } =
+    let
+        endpoint =
+            { apiUrl | path = "/buy-cap" } |> Url.toString
+
+        encodedShop =
+            Encode.object
+                [ ( "shop", Encode.string name )
+                , ( "cents", Encode.int priceCents )
+                ]
+    in
+    Http.send CapBought <|
+        post endpoint (Http.jsonBody encodedShop)
+
+
 centsToString : Int -> String
 centsToString cents =
     "$ " ++ (toFloat cents / 100 |> String.fromFloat)
@@ -131,6 +161,7 @@ type Msg
     | BuyCap CoffeeShop
     | ConfirmBuyCap CoffeeShop
     | CancelBuyCap
+    | CapBought (Result Http.Error String)
     | PurchasesFetched (Result Http.Error (List Purchase))
     | CapPurchasesSumFetched (Result Http.Error Int)
 
@@ -147,11 +178,22 @@ update msg model =
         ConfirmBuyCap shop ->
             ( { model | buyingCap = Just shop }, Cmd.none )
 
-        BuyCap _ ->
-            Debug.todo "y u no do this"
+        BuyCap shop ->
+            -- Confirmed purchase of a cap
+            ( { model | buyingCap = Nothing }
+            , buyCapCmd shop
+            )
 
         CancelBuyCap ->
             ( { model | buyingCap = Nothing }, Cmd.none )
+
+        CapBought res ->
+            case res of
+                Err err ->
+                    Debug.log (Debug.toString err) ( model, Cmd.none )
+
+                Ok _ ->
+                    ( model, getCapSumCmd )
 
         PurchasesFetched res ->
             case res of
@@ -242,19 +284,10 @@ capView attrs shop =
             E.column [ E.centerX, E.spacing 5 ]
                 [ el [ E.width (E.px 100), E.height (E.px 100) ]
                     (E.html <| capSvg shop.lidColor)
-                , el
-                    [ E.centerX
-                    , E.moveLeft 10
-                    ]
+                , el [ E.centerX, E.moveLeft 10 ]
                     (text shop.name)
-                , el
-                    [ E.centerX
-                    , E.moveLeft 10
-                    , Font.color money
-                    ]
-                  <|
-                    text <|
-                        centsToString shop.priceCents
+                , el [ E.centerX, E.moveLeft 10, Font.color money ]
+                    (text <| centsToString shop.priceCents)
                 ]
         }
 
