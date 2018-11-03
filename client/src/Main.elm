@@ -17,6 +17,7 @@ import Palette
     exposing
         ( backgroundColor
         , black
+        , debt
         , grayBlue
         , money
         , textWithBorder
@@ -222,11 +223,18 @@ totalOwed { capSum, purchases } =
                 purchases
 
         total =
-            capSum - totalPurchased
+            totalPurchased - capSum
+
+        color =
+            if total >= 0 then
+                debt
+
+            else
+                money
     in
     E.row [ E.width (E.px 100) ]
         [ el [] (text "Total Owed ")
-        , el [ Font.color money ] (text <| centsToString total)
+        , el [ Font.color color ] (text <| centsToString total)
         ]
 
 
@@ -310,12 +318,12 @@ confirmDialog ({ name, priceCents } as shop) =
                     ++ name
                     ++ "?"
             , E.text ("Price: " ++ centsToString priceCents)
-            , E.row [ E.spaceEvenly, E.width E.fill ]
-                [ button []
+            , E.row [ E.width E.fill, E.spacing 20 ]
+                [ button [ E.centerX ]
                     { onPress = Just <| BuyCap shop
                     , label = E.text "Confirm"
                     }
-                , button []
+                , button [ E.centerX ]
                     { onPress = Just <| CancelBuyCap
                     , label = E.text "Cancel"
                     }

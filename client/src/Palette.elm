@@ -1,6 +1,7 @@
 module Palette exposing
     ( backgroundColor
     , black
+    , debt
     , grayBlue
     , money
     , textWithBorder
@@ -34,6 +35,11 @@ backgroundColor =
 money : Color
 money =
     rgb255 23 124 47
+
+
+debt : Color
+debt =
+    rgb255 195 61 50
 
 
 
