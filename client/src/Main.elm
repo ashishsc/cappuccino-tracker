@@ -317,7 +317,10 @@ confirmDialog ({ name, priceCents } as shop) =
                 "Confirm purchase from "
                     ++ name
                     ++ "?"
-            , E.text ("Price: " ++ centsToString priceCents)
+            , E.row []
+                [ el [] (text "Price: ")
+                , el [ Font.color money ] (priceCents |> centsToString |> text)
+                ]
             , E.row [ E.width E.fill, E.spacing 20 ]
                 [ button [ E.centerX ]
                     { onPress = Just <| BuyCap shop
