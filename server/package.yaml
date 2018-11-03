@@ -30,6 +30,7 @@ dependencies:
   - aeson
   - http-types
   - wai-cors
+  - wai
   - bytestring
 
 library:

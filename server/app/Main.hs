@@ -16,7 +16,12 @@ import qualified Data.Text.Lazy as LazyText
 import Database.PostgreSQL.Simple
 import GHC.Generics
 import Network.HTTP.Types.Status (status200, status201)
-import Network.Wai.Middleware.Cors (simpleCors)
+import Network.Wai (Middleware)
+import Network.Wai.Middleware.Cors
+  ( CorsResourcePolicy(..)
+  , cors
+  , simpleCorsResourcePolicy
+  )
 import System.Environment (getEnvironment, lookupEnv)
 import qualified Web.Scotty
 
@@ -43,11 +48,17 @@ main = do
   connection <-
     connectPostgreSQL $ fromMaybe defaultConnString (fmap pack maybeEnvDbUrl)
   Web.Scotty.scotty 6969 $ do
-    Web.Scotty.middleware simpleCors
+    Web.Scotty.middleware simpleCorsWithContentType
     Web.Scotty.get "/all" $ getTotalAction connection
     Web.Scotty.get "/cap-total" $ getCapSumAction connection
     Web.Scotty.post "/purchase" $ addPurchaseAction connection
     Web.Scotty.post "/buy-cap" $ buyCapAction connection
+
+simpleCorsWithContentType :: Middleware
+simpleCorsWithContentType =
+  cors
+    (const $
+     Just simpleCorsResourcePolicy {corsRequestHeaders = ["content-type"]})
 
 getTotalAction :: Connection -> Web.Scotty.ActionM ()
 getTotalAction connection = do
